@@ -7,12 +7,13 @@ const { MongoClient } = require("mongodb");
 const app = express();
 
 app.use(cors({
-  origin: [
-    "https://luxeweave-collection.netlify.app"
-  ],
+  origin: "https://luxeweave-collection.netlify.app",
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type"]
 }));
+
+// IMPORTANT: handle preflight
+app.options("*", cors());
 
 app.use(express.json());
 
