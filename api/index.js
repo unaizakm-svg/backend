@@ -6,7 +6,14 @@ const { MongoClient } = require("mongodb");
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: [
+    "https://luxeweave-collection.netlify.app"
+  ],
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type"]
+}));
+
 app.use(express.json());
 
 const uri = process.env.MONGO_URI;
