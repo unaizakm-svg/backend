@@ -9,6 +9,11 @@ app.use(express.json());
 const uri = process.env.MONGO_URI;
 const client = new MongoClient(uri);
 
+// HOME ROUTE
+app.get("/", (req, res) => {
+  res.send("Backend is running 👍");
+});
+
 async function run() {
   try {
     await client.connect();
@@ -17,11 +22,6 @@ async function run() {
     const db = client.db("textileDB");
     const products = db.collection("products");
     const users = db.collection("users");
-
-    // HOME
-    app.get("/", (req, res) => {
-      res.send("Server is running 🚀");
-    });
 
     // ADD PRODUCT
     app.post("/add-product", async (req, res) => {
@@ -80,5 +80,4 @@ async function run() {
 
 run();
 
-// IMPORTANT FOR VERCEL
 module.exports = app;
