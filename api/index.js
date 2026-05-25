@@ -10,8 +10,18 @@ app.use(cors());
 app.use(express.json());
 
 const uri = process.env.MONGO_URI;
-
 const client = new MongoClient(uri);
+
+// CONNECT ONCE
+let db;
+
+async function connectDB() {
+  if (!db) {
+    await client.connect();
+    db = client.db("textileDB");
+  }
+  return db;
+}
 
 app.get("/", (req, res) => {
   res.send("Backend is running 👍");
@@ -21,31 +31,17 @@ app.post("/contact", async (req, res) => {
 
   try {
 
-    await client.connect();
-
-    const db = client.db("textileDB");
-
+    const db = await connectDB();
     const contacts = db.collection("contacts");
 
-    await contacts.insertOne({
-
-      name: req.body.name,
-
-      email: req.body.email,
-
-      message: req.body.message
-
-    });
+    await contacts.insertOne(req.body);
 
     res.send("Feedback submitted successfully ✔️");
 
-  }
-
-  catch (err) {
+  } catch (err) {
 
     console.log(err);
-
-    res.send("Error saving data");
+    res.status(500).send("Error saving data");
 
   }
 
