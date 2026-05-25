@@ -12,7 +12,6 @@ app.use(cors({
   allowedHeaders: ["Content-Type"]
 }));
 
-// IMPORTANT: handle preflight
 app.options("*", cors());
 
 app.use(express.json());
@@ -20,7 +19,6 @@ app.use(express.json());
 const uri = process.env.MONGO_URI;
 const client = new MongoClient(uri);
 
-// CONNECT ONCE
 let db;
 
 async function connectDB() {
@@ -36,9 +34,7 @@ app.get("/", (req, res) => {
 });
 
 app.post("/contact", async (req, res) => {
-
   try {
-
     const db = await connectDB();
     const contacts = db.collection("contacts");
 
@@ -47,12 +43,9 @@ app.post("/contact", async (req, res) => {
     res.send("Feedback submitted successfully ✔️");
 
   } catch (err) {
-
     console.log(err);
     res.status(500).send("Error saving data");
-
   }
-
 });
 
 module.exports = app;
