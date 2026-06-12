@@ -7,7 +7,7 @@ const { MongoClient } = require("mongodb");
 const app = express();
 
 app.use(cors({
-  origin: "https://luxeweave-collection.netlify.app",
+  origin: "https://luxeweave.netlify.app/contact",
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type"]
 }));
