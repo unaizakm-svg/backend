@@ -1,39 +1,51 @@
 require("dotenv").config();
+
+const express = require("express");
+const cors = require("cors");
 const { MongoClient } = require("mongodb");
 
-const client = new MongoClient(process.env.MONGO_URI);
+const app = express();
 
-module.exports = async (req, res) => {
+app.use(cors({
+  origin: "https://luxeweave.netlify.app",
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type"]
+}));
 
-  // 🔥 CORS FIX (IMPORTANT)
-  res.setHeader("Access-Control-Allow-Origin", "https://luxeweave.netlify.app");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+app.options("*", cors());
 
-  // 🔥 preflight handle
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
+app.use(express.json());
+
+const uri = process.env.MONGO_URI;
+const client = new MongoClient(uri);
+
+let db;
+
+async function connectDB() {
+  if (!db) {
+    await client.connect();
+    db = client.db("textileDB");
   }
+  return db;
+}
 
-  if (req.method === "POST") {
-    try {
-      await client.connect();
-      const db = client.db("textileDB");
+app.get("/", (req, res) => {
+  res.send("Backend is running 👍");
+});
 
-      await db.collection("contacts").insertOne(req.body);
+app.post("/contact", async (req, res) => {
+  try {
+    const db = await connectDB();
+    const contacts = db.collection("contacts");
 
-      return res.status(200).json({
-        message: "Saved successfully ✔️"
-      });
+    await contacts.insertOne(req.body);
 
-    } catch (err) {
-      console.log(err);
+    res.send("Feedback submitted successfully ✔️");
 
-      return res.status(500).json({
-        error: "Database error"
-      });
-    }
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("Error saving data");
   }
+});
 
-  return res.status(405).json({ message: "Method not allowed" });
-};
+module.exports = app;
