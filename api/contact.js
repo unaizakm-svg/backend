@@ -1,62 +1,39 @@
 require("dotenv").config();
-
-const express = require("express");
-const cors = require("cors");
 const { MongoClient } = require("mongodb");
 
-const app = express();
+const client = new MongoClient(process.env.MONGO_URI);
 
-// ✅ FIX 1: Correct CORS (NO /contact here)
-app.use(cors({
-  origin: "https://luxeweave.netlify.app",
-  methods: ["GET", "POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type"]
-}));
+module.exports = async (req, res) => {
 
-// ✅ FIX 2: Proper preflight handling
-app.options("*", cors());
+  // 🔥 CORS FIX (IMPORTANT)
+  res.setHeader("Access-Control-Allow-Origin", "https://luxeweave.netlify.app");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-app.use(express.json());
-
-// MongoDB setup
-const uri = process.env.MONGO_URI;
-const client = new MongoClient(uri);
-
-let db;
-
-// safe DB connection
-async function connectDB() {
-  if (!db) {
-    await client.connect();
-    db = client.db("textileDB");
+  // 🔥 preflight handle
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
   }
-  return db;
-}
 
-// health check
-app.get("/", (req, res) => {
-  res.send("Backend is running 👍");
-});
+  if (req.method === "POST") {
+    try {
+      await client.connect();
+      const db = client.db("textileDB");
 
-// ✅ FIXED CONTACT ROUTE
-app.post("/contact", async (req, res) => {
-  try {
-    const db = await connectDB();
-    const contacts = db.collection("contacts");
+      await db.collection("contacts").insertOne(req.body);
 
-    await contacts.insertOne(req.body);
+      return res.status(200).json({
+        message: "Saved successfully ✔️"
+      });
 
-    return res.status(200).json({
-      message: "Feedback submitted successfully ✔️"
-    });
+    } catch (err) {
+      console.log(err);
 
-  } catch (err) {
-    console.log("ERROR:", err);
-
-    return res.status(500).json({
-      error: "Error saving data"
-    });
+      return res.status(500).json({
+        error: "Database error"
+      });
+    }
   }
-});
 
-module.exports = app;
+  return res.status(405).json({ message: "Method not allowed" });
+};
